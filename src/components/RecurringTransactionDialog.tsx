@@ -26,6 +26,7 @@ type RecurringTransaction = {
     amount: number;
     frequency: string;
     start_date: string;
+    next_due_date: string;
     account_id: number;
     category_id: number;
 };
@@ -52,10 +53,11 @@ export function RecurringTransactionDialog({ item, isOpen, onOpenChange, onSucce
   const [isLoading, setIsLoading] = useState(false);
   const isEditMode = !!item;
 
+  // Effect for fetching dropdown data
   useEffect(() => {
     if (!isOpen) return;
 
-    const fetchData = async () => {
+    const fetchDropdownData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: accData } = await supabase.from('accounts').select('id, name').eq('user_id', user.id);
@@ -64,28 +66,33 @@ export function RecurringTransactionDialog({ item, isOpen, onOpenChange, onSucce
         setCategories(catData || []);
       }
     };
-    fetchData();
+    fetchDropdownData();
+  }, [isOpen]);
 
-    if (isEditMode && item) {
-        const itemCategory = categories.find(c => c.id === item.category_id);
-        setType(item.amount > 0 ? 'income' : 'expense');
-        setAccountId(item.account_id.toString());
-        setCategoryId(item.category_id.toString());
-        setAmount(Math.abs(item.amount).toString());
-        setDescription(item.description || '');
-        setFrequency(item.frequency);
-        setStartDate(new Date(item.start_date));
-    } else {
-        // Reset form
-        setType('expense');
-        setAccountId(undefined);
-        setCategoryId(undefined);
-        setAmount('');
-        setDescription('');
-        setFrequency(undefined);
-        setStartDate(new Date());
+  // Effect for setting form values when editing or opening
+  useEffect(() => {
+    if (isOpen) {
+        if (isEditMode && item) {
+            setType(item.amount > 0 ? 'income' : 'expense');
+            setAccountId(item.account_id.toString());
+            setCategoryId(item.category_id.toString());
+            setAmount(Math.abs(item.amount).toString());
+            setDescription(item.description || '');
+            setFrequency(item.frequency);
+            setStartDate(new Date(item.start_date));
+        } else {
+            // Reset form for new item
+            setType('expense');
+            setAccountId(undefined);
+            setCategoryId(undefined);
+            setAmount('');
+            setDescription('');
+            setFrequency(undefined);
+            setStartDate(new Date());
+        }
     }
-  }, [item, isEditMode, isOpen, categories]);
+  }, [item, isEditMode, isOpen]);
+
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -113,8 +120,12 @@ export function RecurringTransactionDialog({ item, isOpen, onOpenChange, onSucce
     };
 
     let error;
-    if (isEditMode) {
-        const { error: updateError } = await supabase.from('recurring_transactions').update(recurringData).eq('id', item!.id);
+    if (isEditMode && item) {
+        // When editing, we only update the core fields, not the due date logic
+        const { error: updateError } = await supabase.from('recurring_transactions').update({
+            ...recurringData,
+            next_due_date: item.start_date === formattedStartDate ? item.next_due_date : formattedStartDate // Reset next_due_date only if start_date changes
+        }).eq('id', item!.id);
         error = updateError;
     } else {
         const { error: insertError } = await supabase.from('recurring_transactions').insert(recurringData);
@@ -141,7 +152,7 @@ export function RecurringTransactionDialog({ item, isOpen, onOpenChange, onSucce
             <DialogTitle>{isEditMode ? 'แก้ไขรายการประจำ' : 'สร้างรายการประจำใหม่'}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <ToggleGroup type="single" value={type} onValueChange={(value: 'income' | 'expense') => value && setType(value)} className="grid grid-cols-2">
+            <ToggleGroup type="single" value={type} onValueChange={(value: 'income' | 'expense') => { if(value) setType(value) }} className="grid grid-cols-2">
               <ToggleGroupItem value="expense">รายจ่าย</ToggleGroupItem>
               <ToggleGroupItem value="income">รายรับ</ToggleGroupItem>
             </ToggleGroup>
