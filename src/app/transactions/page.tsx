@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { MoreHorizontal } from 'lucide-react';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import { ThemeToggle } from '@/components/theme-toggle'; // <-- เพิ่มบรรทัดนี้
 // --- สร้างการเชื่อมต่อ Supabase ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -155,6 +156,9 @@ export default function TransactionsPage() {
           <div className="ml-auto flex-1 sm:flex-initial">
             <AddTransactionDialog onTransactionAdded={() => fetchData(user.id)} />
           </div>
+            {/* ----- จุดที่แก้ไข ----- */}
+                    <ThemeToggle />
+                    {/* --------------------- */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">

@@ -21,6 +21,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import { ThemeToggle } from '@/components/theme-toggle'; // <-- เพิ่มบรรทัดนี้
 
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -154,6 +155,9 @@ export default function BudgetsPage() {
               ตั้งงบประมาณ
             </Button>
           </div>
+           {/* ----- จุดที่แก้ไข ----- */}
+                    <ThemeToggle />
+                    {/* --------------------- */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">

@@ -20,6 +20,7 @@ import { CategoryDialog } from '@/components/CategoryDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import { ThemeToggle } from '@/components/theme-toggle'; // <-- เพิ่มบรรทัดนี้
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -123,6 +124,9 @@ export default function CategoriesPage() {
               สร้างหมวดหมู่
             </Button>
           </div>
+            {/* ----- จุดที่แก้ไข ----- */}
+                    <ThemeToggle />
+                    {/* --------------------- */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">

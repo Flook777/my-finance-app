@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { createClient, type User } from '@supabase/supabase-js'; 
 import { AddTransactionDialog } from '@/components/AddTransactionDialog'; 
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
-
+import { ThemeToggle } from '@/components/theme-toggle'; // <-- เพิ่มบรรทัดนี้
 import {
   Card,
   CardContent,
@@ -192,6 +192,9 @@ export default function DashboardPage() {
             {/* --- จุดที่แก้ไข --- */}
             <AddTransactionDialog onTransactionAdded={() => fetchData(user.id)} />
           </div>
+                    {/* ----- จุดที่แก้ไข ----- */}
+          <ThemeToggle />
+          {/* --------------------- */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">

@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { SavingGoalDialog } from '@/components/SavingGoalDialog';
 import { AddFundsDialog } from '@/components/AddFundsDialog';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import { ThemeToggle } from '@/components/theme-toggle'; // <-- เพิ่มบรรทัดนี้
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -122,6 +123,9 @@ export default function SavingGoalsPage() {
               สร้างเป้าหมายใหม่
             </Button>
           </div>
+            {/* ----- จุดที่แก้ไข ----- */}
+                    <ThemeToggle />
+                    {/* --------------------- */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">

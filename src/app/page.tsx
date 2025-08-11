@@ -1,9 +1,9 @@
 // src/app/page.tsx
-'use client'; // <-- เพิ่มบรรทัดนี้ที่ด้านบนสุด
+'use client'; 
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // <-- Import useRouter
-import { createClient } from '@supabase/supabase-js'; // <-- Import createClient
+import { useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -16,14 +16,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-// --- สร้างการเชื่อมต่อ Supabase ---
-// ใช้ค่าจากไฟล์ .env.local ที่เราตั้งไว้
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-// ---------------------------------
 
-// สร้าง Enum เพื่อจัดการโหมดของฟอร์ม
 enum FormMode {
   Login,
   Register,
@@ -31,7 +27,6 @@ enum FormMode {
 
 export default function AuthPage() {
   const [mode, setMode] = useState(FormMode.Login);
-  // State สำหรับเก็บค่าที่ผู้ใช้กรอก
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -40,13 +35,11 @@ export default function AuthPage() {
   const router = useRouter();
   const isLoginMode = mode === FormMode.Login;
 
-  // --- ฟังก์ชันหลักสำหรับจัดการการ Login และ Register ---
   const handleAuth = async (event: React.FormEvent) => {
-    event.preventDefault(); // ป้องกันหน้าเว็บรีโหลด
+    event.preventDefault();
     setIsLoading(true);
 
     if (isLoginMode) {
-      // --- Logic การเข้าสู่ระบบ ---
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -56,10 +49,9 @@ export default function AuthPage() {
         alert(`เกิดข้อผิดพลาดในการ Login: ${error.message}`);
       } else {
         alert('เข้าสู่ระบบสำเร็จ!');
-        router.push('/dashboard'); // พาไปยังหน้า Dashboard
+        router.push('/dashboard');
       }
     } else {
-      // --- Logic การสมัครสมาชิก ---
       if (password !== confirmPassword) {
         alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน!');
         setIsLoading(false);
@@ -79,12 +71,12 @@ export default function AuthPage() {
     }
     setIsLoading(false);
   };
-  // ----------------------------------------------------
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gray-100">
+    // ----- จุดที่แก้ไข: ลบ bg-gray-100 ออกไป -----
+    <main className="flex items-center justify-center min-h-screen">
       <Card className="w-full max-w-sm">
-        <form onSubmit={handleAuth}> {/* <-- เพิ่ม Form และ onSubmit handler */}
+        <form onSubmit={handleAuth}>
           <CardHeader>
             <CardTitle className="text-2xl">
               {isLoginMode ? 'เข้าสู่ระบบ' : 'สร้างบัญชีใหม่'}
@@ -104,7 +96,7 @@ export default function AuthPage() {
                 placeholder="m@example.com"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)} // <-- รับค่าที่กรอก
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
@@ -114,7 +106,7 @@ export default function AuthPage() {
                 type="password"
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)} // <-- รับค่าที่กรอก
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             {!isLoginMode && (
@@ -125,7 +117,7 @@ export default function AuthPage() {
                   type="password"
                   required
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)} // <-- รับค่าที่กรอก
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                 />
               </div>
             )}
@@ -139,7 +131,7 @@ export default function AuthPage() {
               <Button
                 variant="link"
                 className="pl-1"
-                type="button" // <-- กำหนด type เป็น button เพื่อไม่ให้ submit form
+                type="button"
                 onClick={() =>
                   setMode(isLoginMode ? FormMode.Register : FormMode.Login)
                 }
