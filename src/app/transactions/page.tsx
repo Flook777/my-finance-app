@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog';
-import { EditTransactionDialog } from '@/components/EditTransactionDialog'; // <-- Import component ใหม่
+import { EditTransactionDialog } from '@/components/EditTransactionDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,22 +30,22 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { MoreHorizontal } from 'lucide-react';
-import { LoadingSkeleton } from '@/components/LoadingSkeleton';
-import { ThemeToggle } from '@/components/theme-toggle'; // <-- เพิ่มบรรทัดนี้
-// --- สร้างการเชื่อมต่อ Supabase ---
+import { ThemeToggle } from '@/components/theme-toggle';
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-// ---------------------------------
 
-// --- ปรับปรุง Type ---
+// --- Updated Type to include account info ---
 type Transaction = {
   id: number;
   description: string | null;
   amount: number;
   transaction_date: string;
-  category_id?: number; // <-- เพิ่ม category_id
+  category_id?: number;
+  account_id?: number;
   categories: { name: string; type: 'income' | 'expense' } | null;
+  accounts: { name: string } | null; // <-- Add accounts type
 };
 
 type GroupedTransactions = {
@@ -57,10 +57,8 @@ export default function TransactionsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [groupedTransactions, setGroupedTransactions] = useState<GroupedTransactions>({});
   const [isLoading, setIsLoading] = useState(true);
-  // --- เพิ่ม State สำหรับจัดการการแก้ไข ---
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  // ------------------------------------
 
   useEffect(() => {
     const checkUserAndFetchData = async () => {
@@ -77,18 +75,17 @@ export default function TransactionsPage() {
 
   const fetchData = async (userId: string) => {
     setIsLoading(true);
-    // --- ปรับปรุง Query ---
+    // --- Updated Query to fetch account name ---
     const { data, error } = await supabase
       .from('transactions')
-      .select('*, categories(id, name, type)') // <-- ดึง id ของ category มาด้วย
+      .select('*, categories(id, name, type), accounts(name)') // <-- Fetch account name
       .eq('user_id', userId)
       .order('transaction_date', { ascending: false });
 
     if (error) {
       console.error('Error fetching transactions:', error);
     } else if (data) {
-      // --- ปรับปรุงการ map ข้อมูล ---
-      const mappedData = data.map(tx => ({ ...tx, category_id: tx.categories?.id }));
+      const mappedData = data.map(tx => ({ ...tx, category_id: tx.categories?.id, account_id: tx.account_id }));
       const grouped = mappedData.reduce((acc: GroupedTransactions, tx: Transaction) => {
         const date = tx.transaction_date;
         if (!acc[date]) {
@@ -118,47 +115,32 @@ export default function TransactionsPage() {
     }
   };
 
-  // --- เพิ่มฟังก์ชันสำหรับเปิดหน้าต่างแก้ไข ---
   const handleOpenEditDialog = (transaction: Transaction) => {
     setEditingTransaction(transaction);
     setIsEditDialogOpen(true);
   };
-  // --------------------------------------
 
   if (isLoading || !user) {
-  return <LoadingSkeleton />;
-}
+    return <div className="flex items-center justify-center min-h-screen">กำลังโหลดข้อมูล...</div>;
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      {/* Header */}
       <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-10">
         <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
-          <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold md:text-base">
-            💰
-            <span className="sr-only">Finance App</span>
-          </Link>
-          <Link href="/dashboard" className="text-muted-foreground transition-colors hover:text-foreground">
-            Dashboard
-          </Link>
-          <Link href="/transactions" className="text-foreground transition-colors hover:text-foreground">
-            Transactions
-          </Link>
-           <Link href="/categories" className="text-muted-foreground transition-colors hover:text-foreground">
-            Categories
-          </Link>
-          <Link href="/budgets" className="text-muted-foreground transition-colors hover:text-foreground">
-          Budgets
-          </Link>
+          <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold md:text-base">💰</Link>
+          <Link href="/dashboard" className="text-muted-foreground transition-colors hover:text-foreground">Dashboard</Link>
+          <Link href="/transactions" className="text-foreground transition-colors hover:text-foreground">Transactions</Link>
+          <Link href="/categories" className="text-muted-foreground transition-colors hover:text-foreground">Categories</Link>
+          <Link href="/budgets" className="text-muted-foreground transition-colors hover:text-foreground">Budgets</Link>
           <Link href="/saving-goals" className="text-muted-foreground transition-colors hover:text-foreground">Saving Goals</Link>
+          <Link href="/accounts" className="text-muted-foreground transition-colors hover:text-foreground">Accounts</Link>
         </nav>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto flex-1 sm:flex-initial">
             <AddTransactionDialog onTransactionAdded={() => fetchData(user.id)} />
           </div>
-            {/* ----- จุดที่แก้ไข ----- */}
-                    <ThemeToggle />
-                    {/* --------------------- */}
+          <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
@@ -176,8 +158,6 @@ export default function TransactionsPage() {
           </DropdownMenu>
         </div>
       </header>
-
-      {/* Main Content */}
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <div className="flex items-center">
           <h1 className="text-lg font-semibold md:text-2xl">รายการทั้งหมด</h1>
@@ -196,7 +176,12 @@ export default function TransactionsPage() {
                         <div className={`w-2 h-10 rounded-full ${tx.amount > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
                         <div>
                           <p className="font-medium">{tx.description || 'ไม่มีคำอธิบาย'}</p>
-                          <p className="text-sm text-muted-foreground">{tx.categories?.name || 'ไม่มีหมวดหมู่'}</p>
+                          {/* --- Display Category and Account Name --- */}
+                          <p className="text-sm text-muted-foreground">
+                            {tx.categories?.name || 'ไม่มีหมวดหมู่'}
+                            <span className="mx-1">·</span>
+                            {tx.accounts?.name || 'ไม่มีบัญชี'}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -211,7 +196,6 @@ export default function TransactionsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                              {/* --- จุดที่แก้ไข --- */}
                               <DropdownMenuItem onClick={() => handleOpenEditDialog(tx)}>
                                 แก้ไข
                               </DropdownMenuItem>
@@ -246,7 +230,6 @@ export default function TransactionsPage() {
           ))}
         </div>
       </main>
-      {/* --- เพิ่ม Dialog แก้ไขเข้ามาในหน้า --- */}
       <EditTransactionDialog
         transaction={editingTransaction}
         isOpen={isEditDialogOpen}

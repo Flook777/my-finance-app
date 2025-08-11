@@ -27,7 +27,6 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
-// --- สร้างการเชื่อมต่อ Supabase ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -38,12 +37,19 @@ type Category = {
   type: 'income' | 'expense';
 };
 
+// --- Add Account type ---
+type Account = {
+  id: number;
+  name: string;
+};
+
 type Transaction = {
   id: number;
   description: string | null;
   amount: number;
   transaction_date: string;
   category_id?: number;
+  account_id?: number; // --- Add account_id ---
   categories: { name: string; type: 'income' | 'expense' } | null;
 };
 
@@ -68,28 +74,36 @@ export function EditTransactionDialog({
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // เมื่อ transaction ที่ถูกส่งเข้ามาเปลี่ยนไป ให้ตั้งค่าเริ่มต้นของฟอร์ม
+  // --- Add state for accounts ---
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accountId, setAccountId] = useState<string | undefined>();
+
   useEffect(() => {
     if (transaction) {
       setDescription(transaction.description || '');
       setAmount(Math.abs(transaction.amount).toString());
       setCategoryId(transaction.category_id?.toString());
+      setAccountId(transaction.account_id?.toString()); // --- Set initial accountId ---
       setDate(new Date(transaction.transaction_date));
       setType(transaction.amount > 0 ? 'income' : 'expense');
     }
   }, [transaction]);
 
-  // ดึงข้อมูลหมวดหมู่
   useEffect(() => {
-    const fetchCategories = async () => {
+    if (!isOpen) return;
+    const fetchDropdownData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data, error } = await supabase.from('categories').select('*').eq('user_id', user.id);
-        if (data) setCategories(data);
+        // Fetch categories
+        const { data: catData } = await supabase.from('categories').select('*').eq('user_id', user.id);
+        if (catData) setCategories(catData);
+        // Fetch accounts
+        const { data: accData } = await supabase.from('accounts').select('id, name').eq('user_id', user.id);
+        if (accData) setAccounts(accData);
       }
     };
-    fetchCategories();
-  }, []);
+    fetchDropdownData();
+  }, [isOpen]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -104,6 +118,7 @@ export function EditTransactionDialog({
         description,
         amount: finalAmount,
         category_id: categoryId ? parseInt(categoryId) : null,
+        account_id: accountId ? parseInt(accountId) : null, // --- Add account_id to update data ---
         transaction_date: date ? format(date, 'yyyy-MM-dd') : new Date(),
       })
       .eq('id', transaction.id);
@@ -135,6 +150,22 @@ export function EditTransactionDialog({
               <ToggleGroupItem value="expense">รายจ่าย</ToggleGroupItem>
               <ToggleGroupItem value="income">รายรับ</ToggleGroupItem>
             </ToggleGroup>
+
+            {/* --- Account Selector --- */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="account" className="text-right">บัญชี</Label>
+              <Select onValueChange={setAccountId} value={accountId}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="เลือกบัญชี" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map(acc => (
+                    <SelectItem key={acc.id} value={acc.id.toString()}>{acc.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right">จำนวนเงิน</Label>
               <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} className="col-span-3" required />

@@ -115,6 +115,7 @@ export default function SavingGoalsPage() {
           <Link href="/categories" className="text-muted-foreground transition-colors hover:text-foreground">Categories</Link>
           <Link href="/budgets" className="text-muted-foreground transition-colors hover:text-foreground">Budgets</Link>
           <Link href="/saving-goals" className="text-foreground transition-colors hover:text-foreground">Saving Goals</Link>
+          <Link href="/accounts" className="text-foreground transition-colors hover:text-foreground">Accounts</Link>
         </nav>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto flex-1 sm:flex-initial">

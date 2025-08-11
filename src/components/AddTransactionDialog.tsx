@@ -28,7 +28,6 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
-// --- สร้างการเชื่อมต่อ Supabase ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -39,7 +38,12 @@ type Category = {
   type: 'income' | 'expense';
 };
 
-// รับ prop onTransactionAdded เพื่อแจ้งเตือน Dashboard ให้รีเฟรช
+// --- Add Account type ---
+type Account = {
+  id: number;
+  name: string;
+};
+
 export function AddTransactionDialog({ onTransactionAdded }: { onTransactionAdded: () => void }) {
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState('');
@@ -49,34 +53,45 @@ export function AddTransactionDialog({ onTransactionAdded }: { onTransactionAdde
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // --- Add state for accounts ---
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accountId, setAccountId] = useState<string | undefined>();
 
-  // ดึงข้อมูลหมวดหมู่เมื่อ component ถูกโหลด
   useEffect(() => {
-    const fetchCategories = async () => {
+    if (!open) return; // Only fetch when dialog is open
+
+    const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data, error } = await supabase
+        // Fetch categories
+        const { data: categoriesData, error: categoriesError } = await supabase
           .from('categories')
           .select('*')
           .eq('user_id', user.id);
+        if (categoriesError) console.error('Error fetching categories:', categoriesError);
+        else setCategories(categoriesData || []);
 
-        if (error) {
-          console.error('Error fetching categories:', error);
-        } else {
-          setCategories(data || []);
-        }
+        // --- Fetch accounts ---
+        const { data: accountsData, error: accountsError } = await supabase
+          .from('accounts')
+          .select('id, name')
+          .eq('user_id', user.id);
+        if (accountsError) console.error('Error fetching accounts:', accountsError);
+        else setAccounts(accountsData || []);
       }
     };
-    fetchCategories();
-  }, []);
+    fetchData();
+  }, [open]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !categoryId || !amount) {
-      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+    // --- Add validation for accountId ---
+    if (!user || !categoryId || !amount || !accountId) {
+      alert('กรุณากรอกข้อมูลให้ครบถ้วน (บัญชี, หมวดหมู่, จำนวนเงิน)');
       setIsLoading(false);
       return;
     }
@@ -89,19 +104,22 @@ export function AddTransactionDialog({ onTransactionAdded }: { onTransactionAdde
       category_id: parseInt(categoryId),
       transaction_date: date ? format(date, 'yyyy-MM-dd') : new Date(),
       user_id: user.id,
+      account_id: parseInt(accountId), // --- Add account_id to insert data ---
     });
 
     if (error) {
       alert(`เกิดข้อผิดพลาด: ${error.message}`);
     } else {
       alert('บันทึกรายการสำเร็จ!');
-      onTransactionAdded(); // เรียกใช้ callback เพื่อรีเฟรชข้อมูลใน Dashboard
-      setOpen(false); // ปิด Dialog
-      // รีเซ็ตฟอร์ม
+      onTransactionAdded();
+      setOpen(false);
+      // Reset form
       setDescription('');
       setAmount('');
       setCategoryId(undefined);
+      setAccountId(undefined);
       setDate(new Date());
+      setType('expense');
     }
     setIsLoading(false);
   };
@@ -126,6 +144,22 @@ export function AddTransactionDialog({ onTransactionAdded }: { onTransactionAdde
               <ToggleGroupItem value="expense">รายจ่าย</ToggleGroupItem>
               <ToggleGroupItem value="income">รายรับ</ToggleGroupItem>
             </ToggleGroup>
+
+            {/* --- Account Selector --- */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="account" className="text-right">บัญชี</Label>
+              <Select onValueChange={setAccountId} value={accountId}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="เลือกบัญชี" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map(acc => (
+                    <SelectItem key={acc.id} value={acc.id.toString()}>{acc.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right">จำนวนเงิน</Label>
               <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} className="col-span-3" required />
