@@ -8,6 +8,7 @@ import { createClient, type User } from '@supabase/supabase-js';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog'; 
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { TransferDialog } from '@/components/TransferDialog'; // <-- 1. Import component ใหม่
 import {
   Card,
   CardContent,
@@ -68,7 +69,6 @@ type ChartData = {
   value: number;
 };
 
-// --- Add type for the RPC function response ---
 type MonthlySummary = {
   total_income: number;
   total_expense: number;
@@ -126,10 +126,9 @@ export default function DashboardPage() {
 
       const totalBalance = accountsData?.reduce((sum, acc) => sum + acc.balance, 0) || 0;
       
-      // --- This is the corrected part ---
       const { data: monthlyData, error: rpcError } = await supabase
         .rpc('get_monthly_summary', { p_user_id: userId })
-        .single<MonthlySummary>(); // <-- Tell TypeScript the shape of the data
+        .single<MonthlySummary>();
 
       if(rpcError) throw rpcError;
 
@@ -185,7 +184,9 @@ export default function DashboardPage() {
           <Link href="/accounts" className="text-muted-foreground transition-colors hover:text-foreground">Accounts</Link>
         </nav>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-          <div className="ml-auto flex-1 sm:flex-initial">
+          <div className="ml-auto flex items-center gap-2 sm:flex-initial">
+            {/* ----- 2. เพิ่มปุ่มและ Dialog สำหรับโอนเงิน ----- */}
+            <TransferDialog onTransferSuccess={() => fetchData(user.id)} />
             <AddTransactionDialog onTransactionAdded={() => fetchData(user.id)} />
           </div>
           <ThemeToggle />
@@ -208,6 +209,7 @@ export default function DashboardPage() {
       </header>
 
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        {/* ... (ส่วนที่เหลือของหน้า Dashboard เหมือนเดิม) ... */}
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
           <Card>
             <CardHeader>
