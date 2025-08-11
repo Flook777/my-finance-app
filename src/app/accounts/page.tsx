@@ -105,6 +105,7 @@ export default function AccountsPage() {
           <Link href="/budgets" className="text-muted-foreground transition-colors hover:text-foreground">Budgets</Link>
           <Link href="/saving-goals" className="text-muted-foreground transition-colors hover:text-foreground">Saving Goals</Link>
           <Link href="/accounts" className="text-foreground transition-colors hover:text-foreground">Accounts</Link>
+          <Link href="/recurring-transactions" className="text-foreground transition-colors hover:text-foreground">Recurring</Link>
         </nav>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto flex-1 sm:flex-initial">
