@@ -20,6 +20,7 @@ import { BudgetDialog } from '@/components/BudgetDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
+import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -130,8 +131,9 @@ export default function BudgetsPage() {
   };
 
   if (isLoading || !user) {
-    return <div className="flex items-center justify-center min-h-screen">กำลังโหลดข้อมูล...</div>;
-  }
+  return <LoadingSkeleton />;
+}
+
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">

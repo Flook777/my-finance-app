@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient, type User } from '@supabase/supabase-js'; 
 import { AddTransactionDialog } from '@/components/AddTransactionDialog'; 
+import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 
 import {
   Card,
@@ -156,9 +157,10 @@ export default function DashboardPage() {
     return <div className="flex items-center justify-center min-h-screen">กำลังตรวจสอบผู้ใช้งาน...</div>;
   }
   
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">กำลังโหลดข้อมูล...</div>;
-  }
+  if (isLoading || !user) {
+  return <LoadingSkeleton />;
+}
+
 
 
   return (

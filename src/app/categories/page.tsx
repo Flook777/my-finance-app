@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CategoryDialog } from '@/components/CategoryDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -89,9 +90,10 @@ export default function CategoriesPage() {
     setIsDialogOpen(true);
   };
 
-  if (isLoading || !user) {
-    return <div className="flex items-center justify-center min-h-screen">กำลังโหลดข้อมูล...</div>;
-  }
+ if (isLoading || !user) {
+  return <LoadingSkeleton />;
+}
+
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">

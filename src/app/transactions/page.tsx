@@ -30,7 +30,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { MoreHorizontal } from 'lucide-react';
-
+import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 // --- สร้างการเชื่อมต่อ Supabase ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -125,8 +125,8 @@ export default function TransactionsPage() {
   // --------------------------------------
 
   if (isLoading || !user) {
-    return <div className="flex items-center justify-center min-h-screen">กำลังโหลดข้อมูล...</div>;
-  }
+  return <LoadingSkeleton />;
+}
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
